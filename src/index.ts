@@ -1,6 +1,6 @@
 import express, { Application, Request, Response } from "express";
 import bodyParser from "body-parser";
-import cors from "cors"; 
+import cors from "cors";
 import { connectDatabase } from "./database/mongodb";
 import { PORT, FRONTEND_URL } from "./config";
 import authRoutes from "./routes/auth.route";
@@ -8,13 +8,16 @@ import userRoutes from "./routes/user.route";
 
 const app: Application = express();
 
-// CORS MIDDLEWARE (IMPORTANT)
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    credentials: true,
-  })
-);
+const corsOptions = {
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:3003",
+    "http://localhost:3005",
+  ],
+  optionsSuccessStatus: 200,
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
