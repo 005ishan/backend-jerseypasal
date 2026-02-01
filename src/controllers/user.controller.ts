@@ -1,5 +1,7 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { UserService } from "../services/user.service";
+import { createUserDTO, loginUserDTO, updateUserDTO } from "../dtos/user.dto";
+
 
 export class UserController {
   private userService: UserService;
@@ -27,7 +29,7 @@ export class UserController {
   updateUser = async (req: Request, res: Response) => {
     const updatedUser = await this.userService.updateUser(
       req.params.id,
-      req.body
+      req.body,
     );
 
     res.status(200).json({
@@ -42,9 +44,7 @@ export class UserController {
 
     res.status(200).json({
       success: true,
-      message: isDeleted
-        ? "User deleted successfully"
-        : "User not found",
+      message: isDeleted ? "User deleted successfully" : "User not found",
     });
   };
 }
