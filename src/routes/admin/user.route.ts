@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { adminMiddleware } from "../../middlewares/authorized.middleware";
+import {
+  adminMiddleware,
+  authorizedMiddleware,
+} from "../../middlewares/authorized.middleware";
 import { AdminUserController } from "../../controllers/admin/user.controller";
 import { uploads } from "../../middlewares/upload.middleware";
 let adminUserController = new AdminUserController();
