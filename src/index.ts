@@ -4,7 +4,9 @@ import cors from "cors";
 import { connectDatabase } from "./database/mongodb";
 import { PORT, FRONTEND_URL } from "./config";
 import authRoutes from "./routes/auth.route";
-import userRoutes from "./routes/user.route";
+import userRoutes from "./routes/admin/user.route";
+import path from "path";
+import { HttpError } from "./errors/http-error";
 
 const app: Application = express();
 
@@ -19,10 +21,13 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin/users", adminUserRoutes);
 app.use("/api/users", userRoutes);
 
 app.get("/", (req: Request, res: Response) => {
@@ -39,6 +44,17 @@ app.get("/api", (req: Request, res: Response) => {
     message: "API root",
     status: "ok",
   });
+});
+
+app.use((err: Error, req: Request, res: Response, next: Function) => {
+  if (err instanceof HttpError) {
+    return res
+      .status(err.statusCode)
+      .json({ success: false, message: err.message });
+  }
+  return res
+    .status(500)
+    .json({ success: false, message: err.message || "Internal Server Error" });
 });
 
 async function startServer() {

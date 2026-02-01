@@ -1,7 +1,7 @@
-import { createUserDTO, loginUserDTO, updateUserDTO } from "../dtos/user.dto";
+import { createUserDTO, loginUserDTO, updateUserDTO } from "../../dtos/user.dto";
 import { Request, Response, NextFunction } from "express";
 import z from "zod";
-import { AdminUserService } from "../services/admin/user.service";
+import { AdminUserService } from "../../services/admin/user.service";
 
 let adminUserService = new AdminUserService();
 
