@@ -1,50 +1,117 @@
-import { Request, Response, NextFunction } from "express";
-import { UserService } from "../services/user.service";
 import { createUserDTO, loginUserDTO, updateUserDTO } from "../dtos/user.dto";
+import { Request, Response, NextFunction } from "express";
+import z from "zod";
+import { AdminUserService } from "../services/admin/user.service";
 
+let adminUserService = new AdminUserService();
 
-export class UserController {
-  private userService: UserService;
-
-  constructor() {
-    this.userService = new UserService();
+export class AdminUserController {
+  async createUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const parsedData = createUserDTO.safeParse(req.body); // validate request body
+      if (!parsedData.success) {
+        // validation failed
+        return res
+          .status(400)
+          .json({ success: false, message: z.prettifyError(parsedData.error) });
+      }
+      if (req.file) {
+        parsedData.data.imageUrl = `/uploads/${req.file.filename}`;
+      }
+      const userData: createUserDTO = parsedData.data;
+      const newUser = await adminUserService.createUser(userData);
+      return res
+        .status(201)
+        .json({ success: true, message: "User Created", data: newUser });
+    } catch (error: Error | any) {
+      return res
+        .status(error.statusCode ?? 500)
+        .json({
+          success: false,
+          message: error.message || "Internal Server Error",
+        });
+    }
   }
 
-  getAllUsers = async (req: Request, res: Response) => {
-    const users = await this.userService.getAllUsers();
-    res.status(200).json({
-      success: true,
-      data: users,
-    });
-  };
+  async getAllUsers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const users = await adminUserService.getAllUsers();
+      return res
+        .status(200)
+        .json({ success: true, data: users, message: "All Users Retrieved" });
+    } catch (error: Error | any) {
+      return res
+        .status(error.statusCode ?? 500)
+        .json({
+          success: false,
+          message: error.message || "Internal Server Error",
+        });
+    }
+  }
 
-  getUserById = async (req: Request, res: Response) => {
-    const user = await this.userService.getUserById(req.params.id);
-    res.status(200).json({
-      success: true,
-      data: user,
-    });
-  };
+  async updateUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.params.id;
+      const parsedData = updateUserDTO.safeParse(req.body); // validate request body
+      if (!parsedData.success) {
+        // validation failed
+        return res
+          .status(400)
+          .json({ success: false, message: z.prettifyError(parsedData.error) });
+      }
 
-  updateUser = async (req: Request, res: Response) => {
-    const updatedUser = await this.userService.updateUser(
-      req.params.id,
-      req.body,
-    );
+      if (req.file) {
+        parsedData.data.imageUrl = `/uploads/${req.file.filename}`;
+      }
+      const updateData: updateUserDTO = parsedData.data;
+      const updatedUser = await adminUserService.updateUser(userId, updateData);
+      return res
+        .status(200)
+        .json({ success: true, message: "User Updated", data: updatedUser });
+    } catch (error: Error | any) {
+      return res
+        .status(error.statusCode ?? 500)
+        .json({
+          success: false,
+          message: error.message || "Internal Server Error",
+        });
+    }
+  }
 
-    res.status(200).json({
-      success: true,
-      message: "User updated successfully",
-      data: updatedUser,
-    });
-  };
+  async deleteUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.params.id;
+      const deleted = await adminUserService.deleteUser(userId);
+      if (!deleted) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+      return res.status(200).json({ success: true, message: "User Deleted" });
+    } catch (error: Error | any) {
+      return res
+        .status(error.statusCode ?? 500)
+        .json({
+          success: false,
+          message: error.message || "Internal Server Error",
+        });
+    }
+  }
 
-  deleteUser = async (req: Request, res: Response) => {
-    const isDeleted = await this.userService.deleteUser(req.params.id);
-
-    res.status(200).json({
-      success: true,
-      message: isDeleted ? "User deleted successfully" : "User not found",
-    });
-  };
+  async getUserById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.params.id;
+      const user = await adminUserService.getUserById(userId);
+      return res
+        .status(200)
+        .json({ success: true, data: user, message: "Single User Retrieved" });
+    } catch (error: Error | any) {
+      return res
+        .status(error.statusCode ?? 500)
+        .json({
+          success: false,
+          message: error.message || "Internal Server Error",
+        });
+    }
+  }
 }
