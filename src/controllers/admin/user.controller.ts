@@ -1,4 +1,8 @@
-import { createUserDTO, loginUserDTO, updateUserDTO } from "../../dtos/user.dto";
+import {
+  createUserDTO,
+  loginUserDTO,
+  updateUserDTO,
+} from "../../dtos/user.dto";
 import { Request, Response, NextFunction } from "express";
 import z from "zod";
 import { AdminUserService } from "../../services/admin/user.service";
@@ -24,12 +28,10 @@ export class AdminUserController {
         .status(201)
         .json({ success: true, message: "User Created", data: newUser });
     } catch (error: Error | any) {
-      return res
-        .status(error.statusCode ?? 500)
-        .json({
-          success: false,
-          message: error.message || "Internal Server Error",
-        });
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
     }
   }
 
@@ -40,12 +42,10 @@ export class AdminUserController {
         .status(200)
         .json({ success: true, data: users, message: "All Users Retrieved" });
     } catch (error: Error | any) {
-      return res
-        .status(error.statusCode ?? 500)
-        .json({
-          success: false,
-          message: error.message || "Internal Server Error",
-        });
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
     }
   }
 
@@ -69,12 +69,10 @@ export class AdminUserController {
         .status(200)
         .json({ success: true, message: "User Updated", data: updatedUser });
     } catch (error: Error | any) {
-      return res
-        .status(error.statusCode ?? 500)
-        .json({
-          success: false,
-          message: error.message || "Internal Server Error",
-        });
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
     }
   }
 
@@ -89,12 +87,31 @@ export class AdminUserController {
       }
       return res.status(200).json({ success: true, message: "User Deleted" });
     } catch (error: Error | any) {
-      return res
-        .status(error.statusCode ?? 500)
-        .json({
-          success: false,
-          message: error.message || "Internal Server Error",
-        });
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
+
+  async logout(req: Request, res: Response, next: NextFunction) {
+    try {
+      res.clearCookie("authToken", {
+        httpOnly: true,
+        secure: true, // must match how cookie was set
+        sameSite: "lax",
+        path: "/",
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Admin logged out successfully",
+      });
+    } catch (error: Error | any) {
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
     }
   }
 
@@ -106,12 +123,10 @@ export class AdminUserController {
         .status(200)
         .json({ success: true, data: user, message: "Single User Retrieved" });
     } catch (error: Error | any) {
-      return res
-        .status(error.statusCode ?? 500)
-        .json({
-          success: false,
-          message: error.message || "Internal Server Error",
-        });
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
     }
   }
 }

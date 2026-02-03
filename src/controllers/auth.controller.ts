@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { AuthService } from "../services/auth.service";
 import { createUserDTO, loginUserDTO, updateUserDTO } from "../dtos/user.dto";
 import z from "zod";
+import { UserService } from "../services/user.service";
 
 interface AuthRequest extends Request {
   user?: {
@@ -10,6 +11,7 @@ interface AuthRequest extends Request {
 }
 
 const authService = new AuthService();
+const userService = new UserService();
 
 export class AuthController {
   async register(req: Request, res: Response) {
@@ -65,6 +67,27 @@ export class AuthController {
     }
   }
 
+  async logout(req: Request, res: Response) {
+    try {
+      res.clearCookie("authToken", {
+        httpOnly: true,
+        secure: true, // keep same as login cookie
+        sameSite: "lax",
+        path: "/", // IMPORTANT: must match cookie path
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Logout successful",
+      });
+    } catch (error: any) {
+      return res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+      });
+    }
+  }
+
   async getProfile(req: AuthRequest, res: Response) {
     try {
       const userId = req.user?._id;
@@ -84,6 +107,27 @@ export class AuthController {
         data: user,
       });
     } catch (error: any) {
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
+  async requestPasswordReset(req: Request, res: Response) {
+    try {
+      const email = req.body.email;
+      if (!email) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Email is required" });
+      }
+      const user = await userService.sendResetPasswordEmail(email);
+      return res.status(200).json({
+        success: true,
+        data: user,
+        message: "Password reset email sent",
+      });
+    } catch (error: Error | any) {
       return res.status(error.statusCode ?? 500).json({
         success: false,
         message: error.message || "Internal Server Error",
