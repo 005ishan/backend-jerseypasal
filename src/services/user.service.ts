@@ -1,30 +1,148 @@
-import bcrypt from "bcryptjs";
+import { createUserDTO, loginUserDTO } from "../dtos/user.dto";
 import { UserRepository } from "../repositories/user.repository";
+import bcryptjs from "bcryptjs";
+import { HttpError } from "../errors/http-error";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "../config";
+import { IUser } from "../models/user.model";
+import { sendEmail } from "../config/email";
+
+const CLIENT_URL = process.env.CLIENT_URL as string;
+
+let userRepository = new UserRepository();
 
 export class UserService {
-  private userRepository: UserRepository;
+  async createUser(data: createUserDTO) {
+    const emailCheck = await userRepository.getUserByEmail(data.email);
+    if (emailCheck) {
+      throw new HttpError(403, "Email already in use");
+    }
 
-  constructor() {
-    this.userRepository = new UserRepository();
+    // hash password
+    const hashedPassword = await bcryptjs.hash(data.password, 10);
+
+    const userData: Partial<IUser> = {
+      email: data.email,
+      password: hashedPassword,
+      role: data.role ?? "user",
+    };
+
+    const newUser = await userRepository.createUser(userData);
+    return newUser;
+  }
+
+  async loginUser(data: loginUserDTO) {
+    const user = await userRepository.getUserByEmail(data.email);
+    if (!user) {
+      throw new HttpError(404, "User not found");
+    }
+    // compare password
+    const validPassword = await bcryptjs.compare(data.password, user.password);
+    // plaintext, hashed
+    if (!validPassword) {
+      throw new HttpError(401, "Invalid credentials");
+    }
+    // generate jwt
+    const payload = {
+      // user identifier
+      id: user._id,
+      email: user.email,
+      role: user.role,
+    };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "30d" }); // 30 days
+    return { token, user };
   }
 
   async getAllUsers() {
-    return await this.userRepository.getAllUsers();
+    try {
+      const users = await userRepository.getAllUsers();
+      return users;
+    } catch (error: Error | any) {
+      throw new HttpError(500, error.message || "Failed to fetch users");
+    }
   }
 
   async getUserById(id: string) {
-    return await this.userRepository.getUserById(id);
-  }
-
-  async updateUser(id: string, updateData: any) {
-    if (updateData.password) {
-      updateData.password = await bcrypt.hash(updateData.password, 10);
+    try {
+      if (!id) {
+        throw new HttpError(400, "User ID is required");
+      }
+      const user = await userRepository.getUserById(id);
+      if (!user) {
+        throw new HttpError(404, "User not found");
+      }
+      return user;
+    } catch (error: Error | any) {
+      throw new HttpError(
+        error.statusCode ?? 500,
+        error.message || "Failed to fetch user",
+      );
     }
-
-    return await this.userRepository.updateUser(id, updateData);
   }
 
   async deleteUser(id: string) {
-    return await this.userRepository.deleteUser(id);
+    try {
+      if (!id) {
+        throw new HttpError(400, "User ID is required");
+      }
+      const user = await userRepository.getUserById(id);
+      if (!user) {
+        throw new HttpError(404, "User not found");
+      }
+      const deletedUser = await userRepository.deleteUser(id);
+      return deletedUser;
+    } catch (error: Error | any) {
+      throw new HttpError(
+        error.statusCode ?? 500,
+        error.message || "Failed to delete user",
+      );
+    }
+  }
+  async updateUser(id: string, data: Partial<createUserDTO>) {
+    try {
+      if (!id) throw new HttpError(400, "User ID is required");
+
+      const user = await userRepository.getUserById(id);
+      if (!user) throw new HttpError(404, "User not found");
+
+      // Check email uniqueness
+      if (data.email && data.email !== user.email) {
+        const emailCheck = await userRepository.getUserByEmail(data.email);
+        if (emailCheck) throw new HttpError(403, "Email already in use");
+      }
+
+      // Map DTO to IUser-compatible object
+      const updateData: Partial<IUser> = {
+        email: data.email,
+        role: data.role ?? user.role,
+      };
+
+      // Hash password if provided
+      if (data.password) {
+        updateData.password = await bcryptjs.hash(data.password, 10);
+      }
+
+      const updatedUser = await userRepository.updateUser(id, updateData);
+      return updatedUser;
+    } catch (error: any) {
+      throw new HttpError(
+        error.statusCode ?? 500,
+        error.message || "Failed to update user",
+      );
+    }
+  }
+  async sendResetPasswordEmail(email?: string) {
+    if (!email) {
+      throw new HttpError(400, "Email is required");
+    }
+    const user = await userRepository.getUserByEmail(email);
+    if (!user) {
+      throw new HttpError(404, "User not found");
+    }
+    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: "1h" }); // 1 hour expiry
+    const resetLink = `${CLIENT_URL}/reset-password?token=${token}`;
+    const html = `<p>Click <a href="${resetLink}">here</a> to reset your password. This link will expire in 1 hour.</p>`;
+    await sendEmail(user.email, "Password Reset", html);
+    return user;
   }
 }
