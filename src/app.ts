@@ -11,11 +11,7 @@ import { HttpError } from "./errors/http-error";
 const app: Application = express();
 
 const corsOptions = {
-  origin: [
-    "http://localhost:3000",
-    "http://localhost:3003",
-    "http://localhost:3005",
-  ],
+  origin: FRONTEND_URL,
   optionsSuccessStatus: 200,
   credentials: true,
 };

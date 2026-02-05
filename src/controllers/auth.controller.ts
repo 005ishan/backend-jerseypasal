@@ -135,6 +135,27 @@ export class AuthController {
     }
   }
 
+  async resetPassword(req: Request, res: Response) {
+    try {
+      const token = req.params.token;
+      const { newPassword } = req.body;
+      await userService.resetPassword(token, newPassword);
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "Password has been reset successfully.",
+        });
+    } catch (error: Error | any) {
+      return res
+        .status(error.statusCode ?? 500)
+        .json({
+          success: false,
+          message: error.message || "Internal Server Error",
+        });
+    }
+  }
+
   async updateProfile(req: AuthRequest, res: Response) {
     try {
       const userId = req.user?._id;
