@@ -26,10 +26,10 @@ export const authorizedMiddleware = async (
     const token = authHeader.split(" ")[1]; // 0 -> Bearer, 1 -> token
     if (!token) throw new HttpError(401, "Unauthorized JWT missing");
     const decodedToken = jwt.verify(token, JWT_SECRET) as Record<string, any>;
-    if (!decodedToken || !decodedToken.id) {
+    if (!decodedToken || !decodedToken._id) {
       throw new HttpError(401, "Unauthorized JWT unverified");
     } // make function async
-    const user = await userRepository.getUserById(decodedToken.id);
+    const user = await userRepository.getUserById(decodedToken._id);
     if (!user) throw new HttpError(401, "Unauthorized user not found");
     req.user = user; // attach user to request (like tag)
     next();
