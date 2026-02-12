@@ -1,8 +1,8 @@
 export interface Product {
-  _id?: string;
+  _id: string;
   name: string;
   price: number;
-  image?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  imageUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }

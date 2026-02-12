@@ -1,18 +1,16 @@
 import multer from "multer";
 import { v4 as uuidv4 } from "uuid";
-import { Request } from "express";
 import path from "path";
-import { HttpError } from "../errors/http-error";
 import fs from "fs";
+import { Request } from "express";
+import { HttpError } from "../errors/http-error";
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadPath = path.join(__dirname, "../../uploads/");
-    if (!fs.existsSync(uploadPath)) {
+    const uploadPath = path.join(process.cwd(), "uploads/products");
+    if (!fs.existsSync(uploadPath))
       fs.mkdirSync(uploadPath, { recursive: true });
-    }
-
-    cb(null, path.join(__dirname, "../../uploads/"));
+    cb(null, uploadPath);
   },
   filename: function (req, file, cb) {
     const fileSuffix = uuidv4();
@@ -25,17 +23,14 @@ const fileFilter = (
   file: Express.Multer.File,
   cb: multer.FileFilterCallback,
 ) => {
-  if (file.mimetype.startsWith("image")) {
-    cb(null, true);
-  } else {
-    cb(new HttpError(400, "Invalid file type, only JPEG and PNG is allowed!"));
-  }
+  if (file.mimetype.startsWith("image")) cb(null, true);
+  else cb(new HttpError(400, "Only image files are allowed"));
 };
 
 const upload = multer({
-  storage: storage,
-  limits: { fileSize: 1024 * 1024 * 5 }, // 5MB
-  fileFilter: fileFilter,
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter,
 });
 
 export const uploads = {

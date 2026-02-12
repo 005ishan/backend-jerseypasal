@@ -1,29 +1,31 @@
 import { ProductRepository } from "../../repositories/product.repository";
-import { CreateProductDTO } from "../../dtos/product.dto";
+import { CreateProductDTO, UpdateProductDTO } from "../../dtos/product.dto";
+import { Express } from "express";
 
 export class ProductService {
-  private repo = new ProductRepository();
+  private repository = new ProductRepository();
 
-  async createProduct(data: CreateProductDTO, image?: string) {
-    return await this.repo.create({
-      ...data,
-      image,
-    });
+  async create(data: CreateProductDTO, file?: Express.Multer.File) {
+    let imageUrl;
+    if (file) imageUrl = `/uploads/products/${file.filename}`;
+    return this.repository.create({ ...data, imageUrl });
   }
 
-  async getProducts() {
-    return await this.repo.findAll();
+  async getAll() {
+    return this.repository.getAll();
   }
 
-  async getOneProduct(id: string) {
-    return await this.repo.findById(id);
+  async getOne(id: string) {
+    return this.repository.getOne(id);
   }
 
-  async updateProduct(id: string, data: Partial<CreateProductDTO>) {
-    return await this.repo.update(id, data);
+  async update(id: string, data: UpdateProductDTO, file?: Express.Multer.File) {
+    let imageUrl;
+    if (file) imageUrl = `/uploads/products/${file.filename}`;
+    return this.repository.update(id, { ...data, imageUrl });
   }
 
-  async deleteProduct(id: string) {
-    return await this.repo.delete(id);
+  async delete(id: string) {
+    return this.repository.delete(id);
   }
 }
