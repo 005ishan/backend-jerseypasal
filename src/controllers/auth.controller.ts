@@ -139,20 +139,19 @@ export class AuthController {
     try {
       const token = req.params.token;
       const { newPassword } = req.body;
+
+      // Will throw if same as old password
       await userService.resetPassword(token, newPassword);
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: "Password has been reset successfully.",
-        });
-    } catch (error: Error | any) {
-      return res
-        .status(error.statusCode ?? 500)
-        .json({
-          success: false,
-          message: error.message || "Internal Server Error",
-        });
+
+      return res.status(200).json({
+        success: true,
+        message: "Password reset successfully",
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Failed to reset password",
+      });
     }
   }
 
