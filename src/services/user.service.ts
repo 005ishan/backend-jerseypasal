@@ -6,6 +6,8 @@ import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config";
 import { IUser } from "../models/user.model";
 import { sendEmail } from "../config/email";
+import { AddToCartDTO } from "../dtos/cart.dto";
+import { CartItemType, FavouriteItemType } from "../types/user.type";
 
 const CLIENT_URL = process.env.CLIENT_URL as string;
 
@@ -53,22 +55,22 @@ export class UserService {
     return { token, user };
   }
 
-  async getAllUsers(
-        page?: string, size?: string, search?: string
-    ){
-        const pageNumber = page ? parseInt(page) : 1;
-        const pageSize = size ? parseInt(size) : 10;
-        const {users, total} = await userRepository.getAllUsers(
-            pageNumber, pageSize, search
-        );
-        const pagination = {
-            page: pageNumber,
-            size: pageSize,
-            totalItems: total,
-            totalPages: Math.ceil(total / pageSize)
-        }
-        return {users, pagination};
-    }
+  async getAllUsers(page?: string, size?: string, search?: string) {
+    const pageNumber = page ? parseInt(page) : 1;
+    const pageSize = size ? parseInt(size) : 10;
+    const { users, total } = await userRepository.getAllUsers(
+      pageNumber,
+      pageSize,
+      search,
+    );
+    const pagination = {
+      page: pageNumber,
+      size: pageSize,
+      totalItems: total,
+      totalPages: Math.ceil(total / pageSize),
+    };
+    return { users, pagination };
+  }
 
   async getUserById(id: string) {
     try {
@@ -170,5 +172,68 @@ export class UserService {
     const html = `<p>Click <a href="${resetLink}">here</a> to reset your password. This link will expire in 1 hour.</p>`;
     await sendEmail(user.email, "Password Reset", html);
     return user;
+  }
+  async toggleFavourite(userId: string, productId: string) {
+    try {
+      if (!userId || !productId) {
+        throw new HttpError(400, "User ID and Product ID are required");
+      }
+
+      const user = await userRepository.getUserById(userId);
+      if (!user) {
+        throw new HttpError(404, "User not found");
+      }
+
+      return await userRepository.toggleFavourite(userId, productId);
+    } catch (error: any) {
+      throw new HttpError(
+        error.statusCode ?? 500,
+        error.message || "Failed to toggle favourite",
+      );
+    }
+  }
+
+  async addToCart(userId: string, data: AddToCartDTO) {
+    try {
+      if (!userId) {
+        throw new HttpError(400, "User ID is required");
+      }
+
+      const user = await userRepository.getUserById(userId);
+      if (!user) {
+        throw new HttpError(404, "User not found");
+      }
+
+      return await userRepository.addToCart(userId, data);
+    } catch (error: any) {
+      throw new HttpError(
+        error.statusCode ?? 500,
+        error.message || "Failed to add to cart",
+      );
+    }
+  }
+  async updateCartItem(
+    userId: string,
+    productId: string,
+    size: string,
+    quantity: number,
+  ): Promise<CartItemType[]> {
+    return userRepository.updateCartItem(userId, productId, size, quantity);
+  }
+
+  async removeCartItem(
+    userId: string,
+    productId: string,
+    size: string,
+  ): Promise<CartItemType[]> {
+    return userRepository.removeCartItem(userId, productId, size);
+  }
+
+  async getCart(userId: string): Promise<CartItemType[]> {
+    return userRepository.getCart(userId);
+  }
+
+  async getFavourites(userId: string): Promise<FavouriteItemType[]> {
+    return userRepository.getFavourites(userId);
   }
 }

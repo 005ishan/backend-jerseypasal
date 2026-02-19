@@ -10,5 +10,6 @@ router.get("/", controller.getAll);
 router.get("/:id", controller.getOne);
 router.put("/:id", uploads.single("image"), controller.update);
 router.delete("/:id", controller.delete);
+router.get("/category", controller.getByCategory);
 
 export default router;

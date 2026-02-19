@@ -5,6 +5,7 @@ import { connectDatabase } from "./database/mongodb";
 import { PORT, FRONTEND_URL } from "./config";
 import authRoutes from "./routes/auth.route";
 import userRoutes from "./routes/admin/user.route";
+import userRoutess from "./routes/user.route";
 import path from "path";
 import { HttpError } from "./errors/http-error";
 import productRoutes from "./routes/admin/product.route";
@@ -26,7 +27,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin/users", userRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/users", userRoutess);
 app.use("/admin/products", productRoutes);
 
 app.get("/", (req: Request, res: Response) => {

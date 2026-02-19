@@ -14,13 +14,14 @@ export class ProductController {
   };
 
   getAll = async (req: Request, res: Response) => {
-    try {
-      const products = await this.service.getAll();
-      res.status(200).json({ success: true, data: products });
-    } catch (err: any) {
-      res.status(500).json({ success: false, message: err.message });
-    }
-  };
+  try {
+    const category = req.query.category as "club" | "country" | undefined;
+    const products = await this.service.getAll(category);
+    res.status(200).json({ success: true, data: products });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
 
   getOne = async (req: Request, res: Response) => {
     try {
@@ -60,4 +61,16 @@ export class ProductController {
       res.status(500).json({ success: false, message: err.message });
     }
   };
+  getByCategory = async (req: Request, res: Response) => {
+  try {
+    const category = req.query.category as "club" | "country";
+    if (!category) {
+      return res.status(400).json({ success: false, message: "Category required" });
+    }
+    const products = await this.service.getAll(category);
+    res.status(200).json({ success: true, data: products });
+  } catch (err: any) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
 }
