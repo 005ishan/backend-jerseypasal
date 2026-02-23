@@ -12,5 +12,8 @@ router.post("/:userId/cart", authorizedMiddleware, controller.addToCart);
 router.put("/:userId/cart", controller.updateCartItem);
 router.delete("/:userId/cart", controller.removeCartItem);
 router.get("/:userId/cart", controller.getCart);
+router.delete("/:userId/cart/clear", authorizedMiddleware, controller.clearCart);
+
+router.put("/:id",authorizedMiddleware, controller.updateCustomer);
 
 export default router;

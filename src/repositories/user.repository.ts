@@ -165,15 +165,11 @@ export class UserRepository implements IUserRepository {
     }));
   }
 
-  async getCart(userId: string): Promise<CartItemType[]> {
-    const user = await UserModel.findById(userId);
+  async getCart(userId: string) {
+    const user = await UserModel.findById(userId).populate("cart.product");
+
     if (!user) throw new Error("User not found");
 
-    return user.cart.map((i) => ({
-      product: i.product.toString(),
-      quantity: i.quantity,
-      size: i.size,
-      addedAt: i.addedAt,
-    }));
+    return user.cart;
   }
 }
