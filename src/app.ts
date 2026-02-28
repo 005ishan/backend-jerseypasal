@@ -11,6 +11,7 @@ import productRoutes from "./routes/admin/product.route";
 import transactionRouter from "./routes/transaction.route";
 import orderRoutes from "./routes/order.route";
 import adminOrderRoutes from "./routes/admin/order.route";
+import paymentRoutes from "./routes/payment.route";
 
 const app: Application = express();
 
@@ -62,6 +63,7 @@ app.use("/admin/products", productRoutes);
 app.use("/api/transactions", transactionRouter);
 app.use("/api/orders", orderRoutes);
 app.use("/api/admin/orders", adminOrderRoutes);
+app.use("/api/payment", paymentRoutes);
 
 /*
 =================================================
