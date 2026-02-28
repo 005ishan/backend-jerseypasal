@@ -10,7 +10,7 @@ export class TransactionController {
       const transactions = await TransactionModel.find({
         userId,
       }).sort({ createdAt: -1 });
-
+      
       res.json(transactions);
     } catch (error) {
       res.status(500).json({
@@ -18,25 +18,29 @@ export class TransactionController {
       });
     }
   }
+
   async paymentSuccess(req: Request, res: Response) {
     try {
       const { userId, productName, amount, paymentMethod } = req.body;
 
-      await TransactionModel.create({
+      const transactionId = Date.now().toString();
+
+      const transaction = await TransactionModel.create({
         userId,
         productName,
         amount,
         paymentMethod,
-        transactionId: Date.now().toString(),
+        transactionId,
       });
 
       await UserModel.updateOne({ _id: userId }, { $set: { cart: [] } });
 
-      return res.json({ success: true });
+      return res.json({ success: true, transaction });
     } catch (error) {
       return res.status(500).json({ message: "Payment failed" });
     }
   }
+
   async getAllTransactions(req: Request, res: Response) {
     try {
       const transactions = await TransactionModel.find();
