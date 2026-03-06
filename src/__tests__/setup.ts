@@ -12,3 +12,4 @@ afterAll(async () => {
   // close database connection after all tests
   await mongoose.connection.close();
 });
+
